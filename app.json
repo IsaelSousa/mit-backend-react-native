@@ -38,6 +38,12 @@
             "backgroundColor": "#000000"
           }
         }
+      ],
+      [
+        "expo-location",
+        {
+          "androidApiKey": "process.env.GOOGLE_MAPS_API_KEY"
+        }
       ]
     ],
     "experiments": {
