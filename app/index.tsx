@@ -92,7 +92,7 @@ export default function HomePage() {
     useFocusEffect(
         useCallback(() => {
             setTimeout(() => {
-               handleRefreshLocations(); 
+                handleRefreshLocations();
             }, 1000);
         }, [])
     );
@@ -112,17 +112,21 @@ export default function HomePage() {
                 <Marker key={index} coordinate={marker} pinColor={marker.color} />
             ))}
         </MapView>
-        <ListActionsButtons listActions={[{
-            icon: <Entypo name="plus" size={24} color={colorScheme === 'dark' ? '#ffffff' : '#000000'} />,
-            onPress: () => navigateToAddLocation(region)
-        }, {
-            icon: <FontAwesome name="refresh" size={24} color={colorScheme === 'dark' ? '#ffffff' : '#000000'} />,
-            onPress: handleRefreshLocations
-        },
-        {
-            icon: <FontAwesome name="list" size={24} color={colorScheme === 'dark' ? '#ffffff' : '#000000'} />,
-            onPress: () => router.push('/locations_list')
-        }]} />
+        <ListActionsButtons listActions={[
+            {
+                icon: <Entypo name="plus" size={24} color={colorScheme === 'dark' ? '#ffffff' : '#000000'} />,
+                onPress: () => navigateToAddLocation(region)
+            },
+            {
+                icon: <FontAwesome name="refresh" size={24} color={colorScheme === 'dark' ? '#ffffff' : '#000000'} />,
+                onPress: handleRefreshLocations
+            },
+            {
+                icon: <FontAwesome name="list" size={24} color={colorScheme === 'dark' ? '#ffffff' : '#000000'} />,
+                onPress: () => router.push('/locations_list')
+            }
+        ]}
+        />
     </Screen>;
 }
 

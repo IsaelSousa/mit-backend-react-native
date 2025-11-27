@@ -1,13 +1,18 @@
-import ColorPickerModal from '@/components/color_picker';
-import { useColorScheme } from '@/hooks/use-color-scheme.web';
-import { getItem, setItem } from '@/utils/AsyncStorage';
-import AntDesign from '@expo/vector-icons/AntDesign';
-import { useLocalSearchParams, useRouter } from 'expo-router';
-import { useEffect, useState } from 'react';
-import { StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
-import { Region } from 'react-native-maps';
-import uuid from 'react-native-uuid';
-import { Toast } from 'toastify-react-native';
+import ColorPickerModal from "@/components/color_picker";
+import { Button, ButtonText } from "@/components/ui/button";
+import { DownloadIcon, Icon } from "@/components/ui/icon";
+import { useColorScheme } from "@/hooks/use-color-scheme.web";
+import { addNotification } from "@/store/reducers/notificationSlice";
+import { getItem, setItem } from "@/utils/AsyncStorage";
+import AntDesign from "@expo/vector-icons/AntDesign";
+import * as ImagePicker from "expo-image-picker";
+import { useLocalSearchParams, useRouter } from "expo-router";
+import { useEffect, useState } from "react";
+import { StyleSheet, TextInput, TouchableOpacity, View } from "react-native";
+import { Region } from "react-native-maps";
+import uuid from "react-native-uuid";
+import { useDispatch } from "react-redux";
+import { Toast } from "toastify-react-native";
 
 export interface AddLocationParams {
     id: string;
@@ -15,12 +20,15 @@ export interface AddLocationParams {
     longitude: number;
     name: string;
     color: string;
+    imageBase64?: string;
 }
 
 export default function AddLocationPage() {
     const { region } = useLocalSearchParams();
     const colorScheme = useColorScheme();
     const router = useRouter();
+
+    const dispatch = useDispatch();
 
     const [openColorPicker, setOpenColorPicker] = useState<boolean>(false);
     const [regionState, setRegionState] = useState<AddLocationParams | null>(null);
@@ -36,11 +44,39 @@ export default function AddLocationPage() {
             });
 
             Toast.success('Location saved successfully!');
+            dispatch(addNotification({
+                id: uuid.v4().toString(),
+                readed: false,
+                text: "Okay! Your location has been saved successfully.",
+                timestamp: new Date().toISOString()
+            }));
             router.push('/');
         } catch (error) {
             Toast.error('Error saving location');
         }
-    }
+    };
+
+    const pickImage = async () => {
+        const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
+        if (!permissionResult.granted) {
+            alert('Permission to access media library is required!');
+            return;
+        }
+
+        let result = await ImagePicker.launchImageLibraryAsync({
+            base64: true,
+            allowsEditing: true,
+            aspect: [4, 3],
+            quality: 1,
+        });
+
+        if (!result.canceled) {
+            const base64String = result.assets[0].base64;
+            console.log(base64String);
+        } else {
+            alert('You did not select any image.');
+        }
+    };
 
     useEffect(() => {
         const id = uuid.v4();
@@ -50,13 +86,14 @@ export default function AddLocationPage() {
                 id,
                 latitude: data.latitude,
                 longitude: data.longitude,
-                name: '',
+                name: 'Default Name',
                 color: '#ff0000',
             });
         }
     }, [region]);
 
     return <View style={style.container}>
+
         <ColorPickerModal
             open={openColorPicker}
             initialColor={regionState?.color}
@@ -98,9 +135,16 @@ export default function AddLocationPage() {
             placeholderTextColor={colorScheme === 'dark' ? '#888888' : '#aaaaaa'}
         />
 
-        <TouchableOpacity style={style.saveButton} onPress={handleSavePicker}>
-            <Text style={{ color: '#ffffff', fontSize: 20 }}>Save Location</Text>
-        </TouchableOpacity>
+        <View style={{ alignItems: 'center', flexDirection: 'row' }}>
+            <Button className="mt-4" variant="solid" action="positive" size="md" onPress={handleSavePicker}>
+                <ButtonText size="lg" className="p-2" style={{ color: colorScheme === 'dark' ? '#ffffff' : '#000000' }}>Save Location</ButtonText>
+            </Button>
+
+            <Button className="mt-4 ml-4" variant="solid" action="positive" size="md" onPress={pickImage}>
+                <Icon as={DownloadIcon} size="xl" color={colorScheme === "dark" ? "#ffffff" : "#000000"} />
+            </Button>
+        </View>
+
     </View>;
 }
 

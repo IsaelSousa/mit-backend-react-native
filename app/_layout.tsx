@@ -1,4 +1,7 @@
+import { GluestackUIProvider } from '@/components/ui/gluestack-ui-provider';
+import '@/global.css';
 import { useColorScheme } from '@/hooks/use-color-scheme';
+import { store } from '@/store/store';
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
 import * as NavigationBar from 'expo-navigation-bar';
 import { Stack } from 'expo-router';
@@ -9,6 +12,7 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import 'react-native-get-random-values';
 import 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { Provider } from 'react-redux';
 import ToastManager from 'toastify-react-native';
 
 export default function RootLayout() {
@@ -22,18 +26,22 @@ export default function RootLayout() {
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
-      <ToastManager />
-      <SafeAreaView style={{ flex: 1, backgroundColor: '#000' }}>
-        <StatusBar style="auto" />
-        <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-          <Stack>
-            <Stack.Screen name="index" options={{ headerShown: false }} />
-            <Stack.Screen name="add_location" options={{ title: 'Add Location' }} />
-            <Stack.Screen name="edit_location" options={{ title: 'Edit Location' }} />
-            <Stack.Screen name="locations_list" options={{ title: 'Locations List' }} />
-          </Stack>
-        </ThemeProvider>
-      </SafeAreaView>
+      <Provider store={store}>
+        <GluestackUIProvider mode='system'>
+          <ToastManager />
+          <SafeAreaView style={{ flex: 1, backgroundColor: colorScheme === 'dark' ? '#000000' : '#ffffff' }}>
+            <StatusBar style="auto" />
+            <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
+              <Stack>
+                <Stack.Screen name="index" options={{ headerShown: false }} />
+                <Stack.Screen name="add_location" options={{ title: 'Add Location' }} />
+                <Stack.Screen name="edit_location" options={{ title: 'Edit Location' }} />
+                <Stack.Screen name="locations_list" options={{ title: 'Locations List' }} />
+              </Stack>
+            </ThemeProvider>
+          </SafeAreaView>
+        </GluestackUIProvider>
+      </Provider>
     </GestureHandlerRootView>
   );
 }

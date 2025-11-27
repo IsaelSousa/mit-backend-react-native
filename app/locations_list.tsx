@@ -1,18 +1,22 @@
+import { EditIcon, Icon, TrashIcon } from "@/components/ui/icon";
+import { Pressable } from "@/components/ui/pressable";
+import { Text } from "@/components/ui/text";
+import { useThemeColor } from "@/hooks/use-theme-color";
 import { getItem, setItem } from "@/utils/AsyncStorage";
-import AntDesign from '@expo/vector-icons/AntDesign';
 import Entypo from '@expo/vector-icons/Entypo';
 import { useRouter } from "expo-router";
 import { useEffect, useState } from "react";
-import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { StyleSheet, View } from "react-native";
 import { FlatList, RefreshControl } from "react-native-gesture-handler";
 import { Toast } from "toastify-react-native";
 import { AddLocationParams } from "./add_location";
 
 export default function LocationsList() {
     const router = useRouter();
-    
+
     const [markersList, setMarkersList] = useState<AddLocationParams[]>([]);
     const [loading, setLoading] = useState<boolean>(false);
+    const textColor = useThemeColor({}, 'text');
 
     const handleGetLocations = async () => {
         setLoading(true);
@@ -55,21 +59,26 @@ export default function LocationsList() {
                 renderItem={({ item, index }) => (
                     <View key={index} style={styles.item}>
                         <View>
-                            <Text style={styles.text}>{item.name}</Text>
-                            <Text style={styles.subTitle}>Lat: {item.latitude}</Text>
-                            <Text style={styles.subTitle}>Lng: {item.longitude}</Text>
+                            <Text>{item.name}</Text>
+                            <Text className="text-gray-400">Lat: {item.latitude}</Text>
+                            <Text className="text-gray-400">Lng: {item.longitude}</Text>
                         </View>
                         <View>
-                            <TouchableOpacity style={styles.button} onPress={() => router.push({ pathname: '/edit_location', params: { region: JSON.stringify(item) } })}>
-                                <Text style={{ color: 'blue' }}>
-                                    <AntDesign name="edit" size={24} color="black" />
-                                </Text>
-                            </TouchableOpacity>
-                            <TouchableOpacity style={styles.button} onPress={() => handleDeleteLocation(item.id)}>
-                                <Text style={{ color: 'red' }}>
-                                    <Entypo name="trash" size={24} color="black" />
-                                </Text>
-                            </TouchableOpacity>
+                            <Pressable
+                                className="bg-gray-400 p-2 rounded mb-2"
+                                onPress={() => router.push({ pathname: '/edit_location', params: { region: JSON.stringify(item) } })}>
+                                <Icon as={EditIcon} color={textColor} size="xl" />
+                            </Pressable>
+                            <Pressable
+                                className="bg-green-800 p-2 rounded mb-2"
+                                onPress={() => {}}>
+                                <Entypo name="image" size={24} color="white" />
+                            </Pressable>
+                            <Pressable
+                                className="bg-red-400 p-2 rounded"
+                                onPress={() => handleDeleteLocation(item.id)}>
+                                <Icon as={TrashIcon} color={textColor} size="xl" />
+                            </Pressable>
                         </View>
                     </View>
                 )}
@@ -82,7 +91,7 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         padding: 16,
-        backgroundColor: '#fff',
+        backgroundColor: '#000000',
     },
     item: {
         padding: 12,
@@ -92,6 +101,7 @@ const styles = StyleSheet.create({
         justifyContent: 'space-between',
     },
     text: {
+        color: '#ffffff',
         fontSize: 16,
     },
     subTitle: {
