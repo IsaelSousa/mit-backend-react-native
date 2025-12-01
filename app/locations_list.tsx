@@ -1,3 +1,9 @@
+import {
+    AlertDialog,
+    AlertDialogBackdrop,
+    AlertDialogContent,
+    AlertDialogHeader
+} from '@/components/ui/alert-dialog';
 import { EditIcon, Icon, TrashIcon } from "@/components/ui/icon";
 import { Pressable } from "@/components/ui/pressable";
 import { Text } from "@/components/ui/text";
@@ -6,7 +12,7 @@ import { getItem, setItem } from "@/utils/AsyncStorage";
 import Entypo from '@expo/vector-icons/Entypo';
 import { useRouter } from "expo-router";
 import { useEffect, useState } from "react";
-import { StyleSheet, View } from "react-native";
+import { Image, StyleSheet, View } from "react-native";
 import { FlatList, RefreshControl } from "react-native-gesture-handler";
 import { Toast } from "toastify-react-native";
 import { AddLocationParams } from "./add_location";
@@ -18,6 +24,13 @@ export default function LocationsList() {
     const [loading, setLoading] = useState<boolean>(false);
     const textColor = useThemeColor({}, 'text');
 
+    const [dialogVisible, setDialogVisible] = useState<boolean>(false);
+    const [base64Image, setBase64Image] = useState<string>('');
+
+    const handleClose = () => {
+        setDialogVisible(false);
+    }
+
     const handleGetLocations = async () => {
         setLoading(true);
         const storage = getItem<AddLocationParams[]>('locations');
@@ -25,6 +38,13 @@ export default function LocationsList() {
             if (items) setMarkersList(items);
             setLoading(false);
         });
+    };
+
+    const handleOpenImageDialog = (base64: string) => {
+        if (base64) {
+            setBase64Image(base64);
+            setDialogVisible(true);
+        }
     };
 
     const handleDeleteLocation = (id: string) => {
@@ -52,7 +72,20 @@ export default function LocationsList() {
     }, []);
 
     return (
-        <View style={styles.container}>
+        <View style={[styles.container, { backgroundColor: useThemeColor({}, 'background') }]}>
+            <AlertDialog isOpen={dialogVisible} onClose={handleClose} size="md">
+                <AlertDialogBackdrop />
+                <AlertDialogContent style={{ alignItems: 'center', padding: 20 }}>
+                    <AlertDialogHeader>
+                        <Text className="text-lg font-bold mb-4" style={{ color: textColor }}>Location Image</Text>
+                    </AlertDialogHeader>
+                    <Image
+                        source={{ uri: `data:image/jpeg;base64,${base64Image}` }}
+                        style={{ width: 200, height: 200 }}
+                        resizeMode="cover"
+                    />
+                </AlertDialogContent>
+            </AlertDialog>
             <FlatList
                 refreshControl={<RefreshControl refreshing={loading} onRefresh={handleGetLocations} />}
                 data={markersList}
@@ -71,7 +104,7 @@ export default function LocationsList() {
                             </Pressable>
                             <Pressable
                                 className="bg-green-800 p-2 rounded mb-2"
-                                onPress={() => {}}>
+                                onPress={() => handleOpenImageDialog(item.imageBase64 || '')}>
                                 <Entypo name="image" size={24} color="white" />
                             </Pressable>
                             <Pressable
@@ -99,6 +132,7 @@ const styles = StyleSheet.create({
         borderBottomColor: '#eee',
         flexDirection: 'row',
         justifyContent: 'space-between',
+        alignItems: 'center',
     },
     text: {
         color: '#ffffff',

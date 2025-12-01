@@ -8,7 +8,7 @@ import AntDesign from "@expo/vector-icons/AntDesign";
 import * as ImagePicker from "expo-image-picker";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
-import { StyleSheet, TextInput, TouchableOpacity, View } from "react-native";
+import { Image, StyleSheet, TextInput, TouchableOpacity, View } from "react-native";
 import { Region } from "react-native-maps";
 import uuid from "react-native-uuid";
 import { useDispatch } from "react-redux";
@@ -72,7 +72,9 @@ export default function AddLocationPage() {
 
         if (!result.canceled) {
             const base64String = result.assets[0].base64;
-            console.log(base64String);
+            if (typeof base64String === 'string') {
+                setRegionState((prev) => prev ? { ...prev, imageBase64: base64String } : null);
+            }
         } else {
             alert('You did not select any image.');
         }
@@ -144,6 +146,16 @@ export default function AddLocationPage() {
                 <Icon as={DownloadIcon} size="xl" color={colorScheme === "dark" ? "#ffffff" : "#000000"} />
             </Button>
         </View>
+
+        {regionState?.imageBase64 && (
+            <View style={{ marginTop: 20, padding: 2, elevation: 8, backgroundColor: '#000' }}>
+                <Image
+                    source={{ uri: `data:image/jpeg;base64,${regionState.imageBase64}` }}
+                    style={{ width: 300, height: 300 }}
+                    resizeMode="cover"
+                />
+            </View>
+        )}
 
     </View>;
 }
