@@ -1,12 +1,15 @@
-import ColorPickerModal from '@/components/color_picker';
-import { useColorScheme } from '@/hooks/use-color-scheme.web';
-import { getItem, setItem } from '@/utils/AsyncStorage';
-import AntDesign from '@expo/vector-icons/AntDesign';
-import { useLocalSearchParams, useRouter } from 'expo-router';
-import { useEffect, useState } from 'react';
-import { StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
-import { Toast } from 'toastify-react-native';
-import { AddLocationParams } from './add_location';
+import ColorPickerModal from "@/components/color_picker";
+import { Button, ButtonText } from "@/components/ui/button";
+import { DownloadIcon, Icon } from "@/components/ui/icon";
+import { useColorScheme } from "@/hooks/use-color-scheme.web";
+import { getItem, setItem } from "@/utils/AsyncStorage";
+import AntDesign from "@expo/vector-icons/AntDesign";
+import * as ImagePicker from "expo-image-picker";
+import { useLocalSearchParams, useRouter } from "expo-router";
+import { useEffect, useState } from "react";
+import { Image, StyleSheet, TextInput, TouchableOpacity, View } from "react-native";
+import { Toast } from "toastify-react-native";
+import { AddLocationParams } from "./add_location";
 
 export default function EditLocations() {
     const { region } = useLocalSearchParams();
@@ -57,6 +60,30 @@ export default function EditLocations() {
         }
     };
 
+    const pickImage = async () => {
+        const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
+        if (!permissionResult.granted) {
+            alert('Permission to access media library is required!');
+            return;
+        }
+
+        let result = await ImagePicker.launchImageLibraryAsync({
+            base64: true,
+            allowsEditing: true,
+            aspect: [4, 3],
+            quality: 1,
+        });
+
+        if (!result.canceled) {
+            const base64String = result.assets[0].base64;
+            if (typeof base64String === 'string') {
+                setRegionState((prev) => prev ? { ...prev, imageBase64: base64String } : null);
+            }
+        } else {
+            alert('You did not select any image.');
+        }
+    };
+
     useEffect(() => {
         if (region) {
             const data = JSON.parse(region as string) as AddLocationParams;
@@ -104,13 +131,30 @@ export default function EditLocations() {
             placeholderTextColor={colorScheme === 'dark' ? '#888888' : '#aaaaaa'}
         />
 
-        <TouchableOpacity style={style.editButton} onPress={handleEdit}>
-            <Text style={{ color: '#ffffff', fontSize: 20 }}>Edit Location</Text>
-        </TouchableOpacity>
+        <View style={{ alignItems: 'center', flexDirection: 'column' }}>
+            <Button className="mt-4" variant="solid" action="positive" size="md" onPress={handleEdit}>
+                <ButtonText size="lg" className="p-2" style={{ color: colorScheme === 'dark' ? '#ffffff' : '#000000' }}>Save Location</ButtonText>
+            </Button>
 
-        <TouchableOpacity style={[style.editButton, { backgroundColor: 'red' }]} onPress={() => handleDeleteLocation(regionState?.id || '')}>
-            <Text style={{ color: '#ffffff', fontSize: 20 }}>Delete Location</Text>
-        </TouchableOpacity>
+            <Button className="mt-4" variant="solid" action="positive" size="md" onPress={() => handleDeleteLocation(regionState?.id || '')}>
+                <ButtonText size="lg" className="p-2" style={{ color: colorScheme === 'dark' ? '#ffffff' : '#000000' }}>Delete Location</ButtonText>
+            </Button>
+
+            <Button className="mt-4 ml-4" variant="solid" action="positive" size="md" onPress={pickImage}>
+                <Icon as={DownloadIcon} size="xl" color={colorScheme === "dark" ? "#ffffff" : "#000000"} />
+            </Button>
+        </View>
+
+        {regionState?.imageBase64 && (
+            <View style={{ marginTop: 20, padding: 2, elevation: 8, backgroundColor: '#000' }}>
+                <Image
+                    source={{ uri: `data:image/jpeg;base64,${regionState.imageBase64}` }}
+                    style={{ width: 200, height: 200 }}
+                    resizeMode="cover"
+                />
+            </View>
+        )}
+
     </View>;
 }
 
