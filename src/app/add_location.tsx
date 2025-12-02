@@ -1,62 +1,58 @@
-import ColorPickerModal from "@/components/color_picker";
-import { Button, ButtonText } from "@/components/ui/button";
-import { DownloadIcon, Icon } from "@/components/ui/icon";
-import { useColorScheme } from "@/hooks/use-color-scheme.web";
-import { getItem, setItem } from "@/utils/AsyncStorage";
+import ColorPickerModal from "@/src/components/color_picker";
+import { Button, ButtonText } from "@/src/components/ui/button";
+import { DownloadIcon, Icon } from "@/src/components/ui/icon";
+import { useColorScheme } from "@/src/hooks/use-color-scheme.web";
+import { addNotification } from "@/src/store/reducers/notificationSlice";
+import { getItem, setItem } from "@/src/utils/AsyncStorage";
 import AntDesign from "@expo/vector-icons/AntDesign";
 import * as ImagePicker from "expo-image-picker";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import { Image, StyleSheet, TextInput, TouchableOpacity, View } from "react-native";
+import { Region } from "react-native-maps";
+import uuid from "react-native-uuid";
+import { useDispatch } from "react-redux";
 import { Toast } from "toastify-react-native";
-import { AddLocationParams } from "./add_location";
 
-export default function EditLocations() {
+export interface AddLocationParams {
+    id: string;
+    latitude: number;
+    longitude: number;
+    name: string;
+    color: string;
+    imageBase64?: string;
+}
+
+export default function AddLocationPage() {
     const { region } = useLocalSearchParams();
     const colorScheme = useColorScheme();
     const router = useRouter();
 
+    const dispatch = useDispatch();
+
     const [openColorPicker, setOpenColorPicker] = useState<boolean>(false);
     const [regionState, setRegionState] = useState<AddLocationParams | null>(null);
 
-    const handleEdit = () => {
+    const handleSavePicker = () => {
         try {
             const getActualItems = getItem<AddLocationParams[]>('locations');
 
             getActualItems.then((items) => {
-                if (items) {
-                    const updatedItems = items.map(item => {
-                        if (item.id === regionState?.id) {
-                            return { ...item, ...regionState };
-                        }
-                        return item;
-                    });
-                    setItem('locations', updatedItems);
-                }
+                const newItems = items ? [...items] : [];
+                if (regionState) newItems.push(regionState);
+                setItem('locations', newItems);
             });
 
-            Toast.success('Location edited successfully!');
+            Toast.success('Location saved successfully!');
+            dispatch(addNotification({
+                id: uuid.v4().toString(),
+                readed: false,
+                text: "Okay! Your location has been saved successfully.",
+                timestamp: new Date().toISOString()
+            }));
             router.push('/');
         } catch (error) {
-            Toast.error('Error editing location');
-        }
-    };
-
-    const handleDeleteLocation = (id: string) => {
-        try {
-            const storage = getItem<AddLocationParams[]>('locations');
-
-            storage.then((items) => {
-                if (items) {
-                    const filteredItems = items.filter(item => item.id !== id);
-                    setItem('locations', filteredItems);
-                    Toast.success('Location deleted successfully!');
-                    router.push('/');
-                }
-            });
-
-        } catch (error) {
-            Toast.error('Error fetching locations');
+            Toast.error('Error saving location');
         }
     };
 
@@ -85,14 +81,24 @@ export default function EditLocations() {
     };
 
     useEffect(() => {
+        const id = uuid.v4();
         if (region) {
-            const data = JSON.parse(region as string) as AddLocationParams;
-            setRegionState(data);
+            const data = JSON.parse(region as string) as Region;
+            setRegionState({
+                id,
+                latitude: data.latitude,
+                longitude: data.longitude,
+                name: 'Default Name',
+                color: '#ff0000',
+            });
         }
     }, [region]);
 
     return <View style={style.container}>
-        <ColorPickerModal open={openColorPicker}
+
+        <ColorPickerModal
+            open={openColorPicker}
+            initialColor={regionState?.color}
             onComplete={(color) => {
                 setRegionState((prev) => prev ? { ...prev, color: color.hex } : null);
                 setOpenColorPicker(false);
@@ -131,13 +137,9 @@ export default function EditLocations() {
             placeholderTextColor={colorScheme === 'dark' ? '#888888' : '#aaaaaa'}
         />
 
-        <View style={{ alignItems: 'center', flexDirection: 'column' }}>
-            <Button className="mt-4" variant="solid" action="positive" size="md" onPress={handleEdit}>
+        <View style={{ alignItems: 'center', flexDirection: 'row' }}>
+            <Button className="mt-4" variant="solid" action="positive" size="md" onPress={handleSavePicker}>
                 <ButtonText size="lg" className="p-2" style={{ color: colorScheme === 'dark' ? '#ffffff' : '#000000' }}>Save Location</ButtonText>
-            </Button>
-
-            <Button className="mt-4" variant="solid" action="positive" size="md" onPress={() => handleDeleteLocation(regionState?.id || '')}>
-                <ButtonText size="lg" className="p-2" style={{ color: colorScheme === 'dark' ? '#ffffff' : '#000000' }}>Delete Location</ButtonText>
             </Button>
 
             <Button className="mt-4 ml-4" variant="solid" action="positive" size="md" onPress={pickImage}>
@@ -149,7 +151,7 @@ export default function EditLocations() {
             <View style={{ marginTop: 20, padding: 2, elevation: 8, backgroundColor: '#000' }}>
                 <Image
                     source={{ uri: `data:image/jpeg;base64,${regionState.imageBase64}` }}
-                    style={{ width: 200, height: 200 }}
+                    style={{ width: 300, height: 300 }}
                     resizeMode="cover"
                 />
             </View>
@@ -164,7 +166,7 @@ const style = StyleSheet.create({
     subTitle: { fontSize: 16, color: 'gray', marginTop: 10 },
     separator: { marginVertical: 5, height: 1, width: '80%' },
     input: { height: 50, borderColor: 'gray', borderWidth: 1, width: '80%', paddingHorizontal: 10, marginTop: 20, borderRadius: 5 },
-    editButton: { marginTop: 30, paddingVertical: 10, paddingHorizontal: 20, borderRadius: 5, backgroundColor: '#007AFF' },
+    saveButton: { marginTop: 30, paddingVertical: 10, paddingHorizontal: 20, borderRadius: 5, backgroundColor: '#007AFF' },
     removeBUtton: { marginTop: 15, paddingVertical: 10, paddingHorizontal: 20, borderRadius: 5, backgroundColor: '#FF3B30' },
     colorPickerContainer: { flexDirection: 'row', justifyContent: 'center', alignItems: 'center' },
     colorPickerButton: { width: '30%', height: 50, justifyContent: 'center', alignItems: 'center', marginTop: 20 }

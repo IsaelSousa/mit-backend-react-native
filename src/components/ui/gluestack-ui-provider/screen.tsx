@@ -1,4 +1,4 @@
-import { useThemeColor } from '@/hooks/use-theme-color';
+import { useThemeColor } from '@/src/hooks/use-theme-color';
 import { View } from 'react-native';
 
 type Props = {

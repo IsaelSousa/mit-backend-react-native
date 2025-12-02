@@ -1,7 +1,8 @@
-import Label from '@/components/label';
-import ListActionsButtons from '@/components/list_actions_buttons';
-import Screen from '@/components/ui/screen';
-import { getItem } from '@/utils/AsyncStorage';
+import Label from '@/src/components/label';
+import ListActionsButtons from '@/src/components/list_actions_buttons';
+import Screen from '@/src/components/ui/screen';
+import { getItem } from '@/src/utils/AsyncStorage';
+import { useQuery } from '@apollo/client/react';
 import Entypo from '@expo/vector-icons/Entypo';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { useFocusEffect } from '@react-navigation/native';
@@ -11,6 +12,7 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { StyleSheet, useColorScheme } from 'react-native';
 import MapView, { MapPressEvent, Marker, Region } from 'react-native-maps';
 import { Toast } from 'toastify-react-native';
+import { GET_COUNTRY_INFORMATION } from '../services/queries/country/city';
 import { AddLocationParams } from './add_location';
 
 export default function HomePage() {
@@ -60,6 +62,21 @@ export default function HomePage() {
             }
         });
     };
+
+    const {
+        data,
+        loading,
+        error
+    } = useQuery(GET_COUNTRY_INFORMATION, { variables: { code: "BR" } });
+
+    useEffect(() => {
+        console.log("Loading:", loading);
+        console.log("Data:", JSON.stringify(data));
+    }, [data, loading]);
+
+    useEffect(() => {
+        console.log("Error:", error);
+    }, [error]);
 
     useEffect(() => {
         (async () => {

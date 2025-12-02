@@ -1,14 +1,14 @@
-import { BellIcon, Icon } from "@/components/ui/icon";
+import { BellIcon, Icon } from "@/src/components/ui/icon";
 import {
     Modal,
     ModalBackdrop,
     ModalBody,
     ModalContent
-} from '@/components/ui/modal';
-import { Pressable } from "@/components/ui/pressable";
-import { Text } from '@/components/ui/text';
-import { useThemeColor } from "@/hooks/use-theme-color";
-import { selectNotifications } from "@/store/reducers/notificationSlice";
+} from '@/src/components/ui/modal';
+import { Pressable } from "@/src/components/ui/pressable";
+import { Text } from '@/src/components/ui/text';
+import { useThemeColor } from "@/src/hooks/use-theme-color";
+import { selectNotifications } from "@/src/store/reducers/notificationSlice";
 import { useState } from "react";
 import { StyleSheet, View } from "react-native";
 import { useSelector } from "react-redux";

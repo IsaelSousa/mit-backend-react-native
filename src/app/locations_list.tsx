@@ -3,12 +3,12 @@ import {
     AlertDialogBackdrop,
     AlertDialogContent,
     AlertDialogHeader
-} from '@/components/ui/alert-dialog';
-import { EditIcon, Icon, TrashIcon } from "@/components/ui/icon";
-import { Pressable } from "@/components/ui/pressable";
-import { Text } from "@/components/ui/text";
-import { useThemeColor } from "@/hooks/use-theme-color";
-import { getItem, setItem } from "@/utils/AsyncStorage";
+} from '@/src/components/ui/alert-dialog';
+import { EditIcon, Icon, TrashIcon } from "@/src/components/ui/icon";
+import { Pressable } from "@/src/components/ui/pressable";
+import { Text } from "@/src/components/ui/text";
+import { useThemeColor } from "@/src/hooks/use-theme-color";
+import { getItem, setItem } from "@/src/utils/AsyncStorage";
 import Entypo from '@expo/vector-icons/Entypo';
 import { useRouter } from "expo-router";
 import { useEffect, useState } from "react";
