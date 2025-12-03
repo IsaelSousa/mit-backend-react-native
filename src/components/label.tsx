@@ -36,7 +36,7 @@ export default function Label(props: Props) {
         <Modal isOpen={showAlertDialog} onClose={handleClose} size="md">
             <ModalBackdrop />
             <ModalContent>
-                {messages.map((message) => (
+                {messages.map((message: any) => (
                     <ModalBody key={message.id} className="border-b border-gray-200 last:border-0 px-4 py-2">
                         <Text style={{ color: textColor }}>{message.text}</Text>
                         <Text style={{ color: textColor, fontSize: 12 }}>{new Date(message.timestamp).toLocaleString()}</Text>

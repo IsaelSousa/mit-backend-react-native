@@ -9,9 +9,12 @@ import { useFocusEffect } from '@react-navigation/native';
 import * as Location from 'expo-location';
 import { useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { StyleSheet, useColorScheme } from 'react-native';
+import { Modal, StyleSheet, Text, TouchableOpacity, useColorScheme, View } from 'react-native';
+import { ScrollView } from 'react-native-gesture-handler';
 import MapView, { MapPressEvent, Marker, Region } from 'react-native-maps';
 import { Toast } from 'toastify-react-native';
+import { Button, ButtonIcon } from '../components/ui/button';
+import { CloseIcon } from '../components/ui/icon';
 import { GET_COUNTRY_INFORMATION } from '../services/queries/country/city';
 import { AddLocationParams } from './add_location';
 
@@ -27,7 +30,9 @@ export default function HomePage() {
         longitudeDelta: 0.01,
     });
 
+    const [portalEnabled, setPortalEnabled] = useState<boolean>(false);
     const [markersList, setMarkersList] = useState<AddLocationParams[]>([]);
+    const handleClose = () => setPortalEnabled(false);
 
     const handleMapPress = (event: MapPressEvent) => {
         const coord = event.nativeEvent.coordinate;
@@ -67,16 +72,7 @@ export default function HomePage() {
         data,
         loading,
         error
-    } = useQuery(GET_COUNTRY_INFORMATION, { variables: { code: "BR" } });
-
-    useEffect(() => {
-        console.log("Loading:", loading);
-        console.log("Data:", JSON.stringify(data));
-    }, [data, loading]);
-
-    useEffect(() => {
-        console.log("Error:", error);
-    }, [error]);
+    } = useQuery(GET_COUNTRY_INFORMATION);
 
     useEffect(() => {
         (async () => {
@@ -129,6 +125,39 @@ export default function HomePage() {
                 <Marker key={index} coordinate={marker} pinColor={marker.color} />
             ))}
         </MapView>
+
+        <Modal visible={portalEnabled} onRequestClose={handleClose} animationType="slide" transparent={false}>
+            <View style={{ flex: 1, justifyContent: 'center', borderColor: 'black', flexDirection: 'column' }}>
+                <Button
+                    size="xs"
+                    className="h-6 px-1 absolute top-2 right-2"
+                    variant="outline"
+                    onPress={handleClose}
+                >
+                    <ButtonIcon as={CloseIcon} />
+                </Button>
+
+                <ScrollView>
+                    {data?.countries.map(country => (
+                        <TouchableOpacity 
+                        style={{ padding: 10, borderBottomWidth: 1, borderBottomColor: '#ccc' }} 
+                        onPress={() => {
+                            setRegion({
+                            latitude: country.defaultLatitude,
+                            longitude: country.defaultLongitude,
+                            latitudeDelta: 0.01,
+                            longitudeDelta: 0.01,
+                        })
+                        handleClose();
+                        }}
+                        key={country.id}>
+                            <Text>{country.name}</Text>
+                        </TouchableOpacity>
+                    ))}
+                </ScrollView>
+            </View>
+        </Modal>
+
         <ListActionsButtons listActions={[
             {
                 icon: <Entypo name="plus" size={24} color={colorScheme === 'dark' ? '#ffffff' : '#000000'} />,
@@ -141,6 +170,10 @@ export default function HomePage() {
             {
                 icon: <FontAwesome name="list" size={24} color={colorScheme === 'dark' ? '#ffffff' : '#000000'} />,
                 onPress: () => router.push('/locations_list')
+            },
+            {
+                icon: <FontAwesome name="book" size={24} color={colorScheme === 'dark' ? '#ffffff' : '#000000'} />,
+                onPress: () => setPortalEnabled(true)
             }
         ]}
         />

@@ -1,8 +1,9 @@
 {
   "name": "graphql-server",
+  "type": "module",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "index.ts",
   "scripts": {
     "start": "ts-node index.ts"
   },

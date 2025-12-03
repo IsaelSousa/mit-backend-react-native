@@ -1,35 +1,29 @@
 import { gql, TypedDocumentNode } from '@apollo/client';
 
-export const GET_COUNTRY_INFORMATION: TypedDocumentNode<IData, ICountryParams> = gql`
-    query Query ($code: String!) {
-        country(code: $code) {
-            name
-            native
-            capital
-            emoji
-            currency
-            languages {
-            code
-            name
-            }
+export const GET_COUNTRY_INFORMATION: TypedDocumentNode<IData> = gql`
+    query Query {
+        countries {
+            id,
+            code,
+            name,
+            language,
+            defaultLatitude,
+            defaultLongitude
         }
     }
 `;
 
 export interface IData {
-    country: ICountry;
+    countries: ICountry[];
 }
 
 export interface ICountry {
-    native: string;
-    capital: string;
-    emoji: string;
-    currency: string;
-    languages: Array<{
-        code: string;
-        name: string;
-    }>;
+    id: string;
+    code: string;
     name: string;
+    language: string[];
+    defaultLatitude: number;
+    defaultLongitude: number;
 }
 
 export interface ICountryParams {
