@@ -15,7 +15,7 @@ import { useEffect, useState } from "react";
 import { Image, StyleSheet, View } from "react-native";
 import { FlatList, RefreshControl } from "react-native-gesture-handler";
 import { Toast } from "toastify-react-native";
-import { AddLocationParams } from "./add_location";
+import { AddLocationParams } from '../services/queries/country/location';
 
 export default function LocationsList() {
     const router = useRouter();
