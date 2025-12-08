@@ -11,6 +11,15 @@ interface Country {
     defaultLongitude: number;
 }
 
+interface Location {
+    id: string;
+    latitude: number;
+    longitude: number;
+    name: string;
+    color: string;
+    imageBase64?: string;
+}
+
 let countries: Country[] = [
     {
         id: uuidv4(), name: "United States", code: "US", language: ["English"],
@@ -149,6 +158,8 @@ let countries: Country[] = [
     }
 ];
 
+let locations: Location[] = [];
+
 const typeDefs = `#graphql
     type Country {
         id: String!
@@ -159,9 +170,25 @@ const typeDefs = `#graphql
         defaultLongitude: Float!
     }
 
+    type Location {
+        id: String!
+        latitude: Float!
+        longitude: Float!
+        name: String!
+        color: String!
+        imageBase64: String
+    }
+
     type Query {
         countries: [Country!]!
         country(code: String!): Country
+        location: [Location!]!
+    }
+
+    type Mutation {
+        createLocation(latitude: Float!, longitude: Float!, name: String!, color: String!, imageBase64: String): Location!
+        updateLocation(id: String!, latitude: Float, longitude: Float, name: String, color: String, imageBase64: String): Location!
+        deleteLocation(id: String!): Boolean!
     }
 `;
 
@@ -169,6 +196,45 @@ const resolvers = {
     Query: {
         countries: () => countries,
         country: (_: any, args: { code: string }) => countries.find(country => country.code === args.code),
+
+        location: () => locations,
+    },
+
+    Mutation: {
+        createLocation: (_: any, args: Location) => {
+            const newLocation: Location = {
+                id: uuidv4(),
+                latitude: args.latitude,
+                longitude: args.longitude,
+                name: args.name,
+                color: args.color,
+                imageBase64: args.imageBase64 ?? "",
+            };
+            locations.push(newLocation);
+            return newLocation;
+        },
+        updateLocation: (_: any, args: Partial<Location> & { id: string }) => {
+            const locationIndex = locations.findIndex(loc => loc.id === args.id);
+            if (locationIndex === -1) throw new Error("Location not found");
+
+            const updatedLocation: Location = {
+                id: locations[locationIndex]?.id ?? "",
+                latitude: args.latitude ?? locations[locationIndex]?.latitude ?? 0,
+                longitude: args.longitude ?? locations[locationIndex]?.longitude ?? 0,
+                name: args.name ?? locations[locationIndex]?.name ?? "",
+                color: args.color ?? locations[locationIndex]?.color ?? "",
+                imageBase64: args.imageBase64 ?? locations[locationIndex]?.imageBase64 ?? "",
+            };
+
+            locations[locationIndex] = updatedLocation;
+            return updatedLocation;
+        },
+        deleteLocation: (_: any, args: { id: string }) => {
+            const locationIndex = locations.findIndex(loc => loc.id === args.id);
+            if (locationIndex === -1) return false;
+            locations.splice(locationIndex, 1);
+            return true;
+        }
     }
 };
 

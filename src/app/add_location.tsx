@@ -13,15 +13,7 @@ import { Region } from "react-native-maps";
 import uuid from "react-native-uuid";
 import { useDispatch } from "react-redux";
 import { Toast } from "toastify-react-native";
-
-export interface AddLocationParams {
-    id: string;
-    latitude: number;
-    longitude: number;
-    name: string;
-    color: string;
-    imageBase64?: string;
-}
+import { AddLocationParams } from "../services/queries/country/location";
 
 export default function AddLocationPage() {
     const { region } = useLocalSearchParams();

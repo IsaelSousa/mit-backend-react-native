@@ -9,14 +9,13 @@ import { useFocusEffect } from '@react-navigation/native';
 import * as Location from 'expo-location';
 import { useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { Modal, StyleSheet, Text, TouchableOpacity, useColorScheme, View } from 'react-native';
-import { ScrollView } from 'react-native-gesture-handler';
+import { Modal, ScrollView, StyleSheet, Text, TouchableOpacity, useColorScheme, View } from 'react-native';
 import MapView, { MapPressEvent, Marker, Region } from 'react-native-maps';
 import { Toast } from 'toastify-react-native';
 import { Button, ButtonIcon } from '../components/ui/button';
 import { CloseIcon } from '../components/ui/icon';
 import { GET_COUNTRY_INFORMATION } from '../services/queries/country/city';
-import { AddLocationParams } from './add_location';
+import { AddLocationParams } from '../services/queries/country/location';
 
 export default function HomePage() {
     const colorScheme = useColorScheme();
