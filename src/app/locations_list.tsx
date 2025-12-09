@@ -8,36 +8,37 @@ import { EditIcon, Icon, TrashIcon } from "@/src/components/ui/icon";
 import { Pressable } from "@/src/components/ui/pressable";
 import { Text } from "@/src/components/ui/text";
 import { useThemeColor } from "@/src/hooks/use-theme-color";
-import { getItem, setItem } from "@/src/utils/AsyncStorage";
 import Entypo from '@expo/vector-icons/Entypo';
 import { useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import { Image, StyleSheet, View } from "react-native";
 import { FlatList, RefreshControl } from "react-native-gesture-handler";
 import { Toast } from "toastify-react-native";
-import { AddLocationParams } from '../services/queries/country/location';
+import { useLocation } from '../hooks/useLocation';
+import { LocationData } from '../services/queries/country/location';
 
 export default function LocationsList() {
     const router = useRouter();
 
-    const [markersList, setMarkersList] = useState<AddLocationParams[]>([]);
+    const [markersList, setMarkersList] = useState<LocationData[]>([]);
     const [loading, setLoading] = useState<boolean>(false);
     const textColor = useThemeColor({}, 'text');
+    const { getData, updateData, createData, deleteData } = useLocation();
 
     const [dialogVisible, setDialogVisible] = useState<boolean>(false);
     const [base64Image, setBase64Image] = useState<string>('');
 
     const handleClose = () => {
         setDialogVisible(false);
-    }
+    };
 
     const handleGetLocations = async () => {
         setLoading(true);
-        const storage = getItem<AddLocationParams[]>('locations');
-        storage.then((items) => {
-            if (items) setMarkersList(items);
+        const { data } = getData();
+        if (data && data.location) {
+            setMarkersList(data.location);
             setLoading(false);
-        });
+        }
     };
 
     const handleOpenImageDialog = (base64: string) => {
@@ -50,17 +51,16 @@ export default function LocationsList() {
     const handleDeleteLocation = (id: string) => {
         try {
             setLoading(true);
-            const storage = getItem<AddLocationParams[]>('locations');
-
-            storage.then((items) => {
-                if (items) {
-                    const filteredItems = items.filter(item => item.id !== id);
-                    setMarkersList(filteredItems);
-                    setItem('locations', filteredItems);
+            const { loading } = deleteData(id);
+            if (!loading) {
+                const { data } = getData();
+                if (data && data.location) {
+                    setMarkersList(data.location);
                     setLoading(false);
                     Toast.success('Location deleted successfully!');
                 }
-            });
+            }
+
 
         } catch (error) {
             Toast.error('Error fetching locations');
