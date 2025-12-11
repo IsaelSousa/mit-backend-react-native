@@ -21,7 +21,7 @@ export function useLocation() {
 
   return {
     // query
-    ...queryResult,           // ou data: queryResult.data etc.
+    queryResult,
     // mutations
     updateData,
     updateResult,

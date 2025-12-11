@@ -2,6 +2,7 @@ import ColorPickerModal from "@/src/components/color_picker";
 import { Button, ButtonText } from "@/src/components/ui/button";
 import { DownloadIcon, Icon } from "@/src/components/ui/icon";
 import { useColorScheme } from "@/src/hooks/use-color-scheme.web";
+import { addLocation } from "@/src/store/reducers/locationSlice";
 import { addNotification } from "@/src/store/reducers/notificationSlice";
 import AntDesign from "@expo/vector-icons/AntDesign";
 import * as ImagePicker from "expo-image-picker";
@@ -20,7 +21,7 @@ export default function AddLocationPage() {
     const colorScheme = useColorScheme();
     const router = useRouter();
 
-    const { createData } = useLocation();
+    const { createData, queryResult } = useLocation();
     
     const dispatch = useDispatch();
 
@@ -46,6 +47,14 @@ export default function AddLocationPage() {
                     timestamp: new Date().toISOString()
                 }));
                 router.push('/');
+
+                const dataResult = queryResult.data;
+
+                if (dataResult) {
+                    dispatch(addLocation(dataResult.location));
+                    console.log('Dispatched addLocation with:', dataResult.location);
+                }
+                    
             }
 
         } catch (error) {

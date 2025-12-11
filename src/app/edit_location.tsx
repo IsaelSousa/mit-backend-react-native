@@ -6,8 +6,9 @@ import AntDesign from "@expo/vector-icons/AntDesign";
 import * as ImagePicker from "expo-image-picker";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
-import { Image, StyleSheet, TextInput, TouchableOpacity, View } from "react-native";
+import { ActivityIndicator, Image, StyleSheet, TextInput, TouchableOpacity, View } from "react-native";
 import { Toast } from "toastify-react-native";
+import { useLocation } from "../hooks/useLocation";
 import { UpdateLocationParams } from "../services/queries/country/location";
 
 export default function EditLocations() {
@@ -15,6 +16,9 @@ export default function EditLocations() {
     const colorScheme = useColorScheme();
     const router = useRouter();
 
+    const { updateData, deleteData } = useLocation();
+
+    const [loading, setLoading] = useState<boolean>(false);
     const [openColorPicker, setOpenColorPicker] = useState<boolean>(false);
     const [regionState, setRegionState] = useState<UpdateLocationParams>({
         updateLocationId: '',
@@ -27,19 +31,14 @@ export default function EditLocations() {
 
     const handleEdit = () => {
         try {
-            // const getActualItems = getItem<UpdateLocationParams[]>('locations');
-
-            // getActualItems.then((items) => {
-            //     if (items) {
-            //         const updatedItems = items.map(item => {
-            //             if (item.id === regionState?.id) {
-            //                 return { ...item, ...regionState };
-            //             }
-            //             return item;
-            //         });
-            //         setItem('locations', updatedItems);
-            //     }
-            // });
+            updateData({
+                updateLocationId: regionState.updateLocationId,
+                name: regionState.name,
+                latitude: regionState.latitude,
+                longitude: regionState.longitude,
+                color: regionState.color,
+                imageBase64: regionState.imageBase64 || ''
+            });
 
             Toast.success('Location edited successfully!');
             router.push('/');
@@ -48,19 +47,17 @@ export default function EditLocations() {
         }
     };
 
-    const handleDeleteLocation = (id: string) => {
+    const handleDeleteLocation = async () => {
         try {
-            // const storage = getItem<UpdateLocationParams[]>('locations');
+            setLoading(true);
+            console.log('Deleting location with id:', regionState.updateLocationId);
+            const { data } = await deleteData(regionState.updateLocationId);
 
-            // storage.then((items) => {
-            //     if (items) {
-            //         const filteredItems = items.filter(item => item.id !== id);
-            //         setItem('locations', filteredItems);
-            //         Toast.success('Location deleted successfully!');
-            //         router.push('/');
-            //     }
-            // });
-
+            if (data?.deleteLocation) {
+                setLoading(false);
+                Toast.success('Location deleted successfully!');
+                router.push('/');
+            }
         } catch (error) {
             Toast.error('Error fetching locations');
         }
@@ -106,6 +103,8 @@ export default function EditLocations() {
             onClose={() => setOpenColorPicker(false)}
         />
 
+        <ActivityIndicator animating={loading} size="large" color="#0000ff" />
+
         <TextInput
             style={[style.input, { color: colorScheme === 'dark' ? '#ffffff' : '#000000' }]}
             placeholder="Location Name" value={regionState?.name}
@@ -142,7 +141,7 @@ export default function EditLocations() {
                 <ButtonText size="lg" className="p-2" style={{ color: colorScheme === 'dark' ? '#ffffff' : '#000000' }}>Save Location</ButtonText>
             </Button>
 
-            <Button className="mt-4" variant="solid" action="positive" size="md" onPress={() => handleDeleteLocation(regionState?.updateLocationId || '')}>
+            <Button className="mt-4" variant="solid" action="positive" size="md" onPress={() => handleDeleteLocation()}>
                 <ButtonText size="lg" className="p-2" style={{ color: colorScheme === 'dark' ? '#ffffff' : '#000000' }}>Delete Location</ButtonText>
             </Button>
 

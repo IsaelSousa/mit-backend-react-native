@@ -15,15 +15,13 @@ import { Image, StyleSheet, View } from "react-native";
 import { FlatList, RefreshControl } from "react-native-gesture-handler";
 import { Toast } from "toastify-react-native";
 import { useLocation } from '../hooks/useLocation';
-import { LocationData } from '../services/queries/country/location';
 
 export default function LocationsList() {
     const router = useRouter();
-
-    const [markersList, setMarkersList] = useState<LocationData[]>([]);
-    const [loading, setLoading] = useState<boolean>(false);
     const textColor = useThemeColor({}, 'text');
-    const { getData, updateData, createData, deleteData } = useLocation();
+
+    const [loading, setLoading] = useState<boolean>(false);
+    const { queryResult, deleteData } = useLocation();
 
     const [dialogVisible, setDialogVisible] = useState<boolean>(false);
     const [base64Image, setBase64Image] = useState<string>('');
@@ -33,35 +31,28 @@ export default function LocationsList() {
     };
 
     const handleGetLocations = async () => {
-        setLoading(true);
-        const { data } = getData();
-        if (data && data.location) {
-            setMarkersList(data.location);
-            setLoading(false);
-        }
+        queryResult.refetch();
     };
 
     const handleOpenImageDialog = (base64: string) => {
         if (base64) {
             setBase64Image(base64);
             setDialogVisible(true);
+        } else {
+            Toast.info('No image available for this location');
         }
     };
 
-    const handleDeleteLocation = (id: string) => {
+    const handleDeleteLocation = async (id: string) => {
         try {
             setLoading(true);
-            const { loading } = deleteData(id);
-            if (!loading) {
-                const { data } = getData();
-                if (data && data.location) {
-                    setMarkersList(data.location);
-                    setLoading(false);
-                    Toast.success('Location deleted successfully!');
-                }
+            const { data } = await deleteData(id);
+
+            if (data?.deleteLocation) {
+                queryResult.refetch();
+                setLoading(false);
+                Toast.success('Location deleted successfully!');
             }
-
-
         } catch (error) {
             Toast.error('Error fetching locations');
         }
@@ -88,7 +79,7 @@ export default function LocationsList() {
             </AlertDialog>
             <FlatList
                 refreshControl={<RefreshControl refreshing={loading} onRefresh={handleGetLocations} />}
-                data={markersList}
+                data={queryResult.data?.location || []}
                 renderItem={({ item, index }) => (
                     <View key={index} style={styles.item}>
                         <View>
@@ -99,10 +90,22 @@ export default function LocationsList() {
                         <View>
                             <Pressable
                                 className="bg-gray-400 p-2 rounded mb-2"
-                                onPress={() => router.push({ pathname: '/edit_location', params: { region: JSON.stringify(item) } })}>
+                                onPress={() => router.push({
+                                    pathname: '/edit_location', params: {
+                                        region: JSON.stringify({
+                                            updateLocationId: item.id,
+                                            name: item.name,
+                                            latitude: item.latitude,
+                                            longitude: item.longitude,
+                                            color: item.color,
+                                            imageBase64: item.imageBase64 || ''
+                                        })
+                                    }
+                                })}>
                                 <Icon as={EditIcon} color={textColor} size="xl" />
                             </Pressable>
                             <Pressable
+                                disabled={!item.imageBase64}
                                 className="bg-green-800 p-2 rounded mb-2"
                                 onPress={() => handleOpenImageDialog(item.imageBase64 || '')}>
                                 <Entypo name="image" size={24} color="white" />
