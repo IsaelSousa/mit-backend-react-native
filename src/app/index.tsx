@@ -1,26 +1,28 @@
 import Label from '@/src/components/label';
 import ListActionsButtons from '@/src/components/list_actions_buttons';
 import Screen from '@/src/components/ui/screen';
-import { getItem } from '@/src/utils/AsyncStorage';
+import { addLocation, selectLocations } from "@/src/store/reducers/locationSlice";
 import { useQuery } from '@apollo/client/react';
 import Entypo from '@expo/vector-icons/Entypo';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
-import { useFocusEffect } from '@react-navigation/native';
 import * as Location from 'expo-location';
 import { useRouter } from 'expo-router';
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Modal, ScrollView, StyleSheet, Text, TouchableOpacity, useColorScheme, View } from 'react-native';
 import MapView, { MapPressEvent, Marker, Region } from 'react-native-maps';
+import { useDispatch, useSelector } from 'react-redux';
 import { Toast } from 'toastify-react-native';
 import { Button, ButtonIcon } from '../components/ui/button';
 import { CloseIcon } from '../components/ui/icon';
+import { useLocation } from '../hooks/useLocation';
 import { GET_COUNTRY_INFORMATION } from '../services/queries/country/city';
-import { AddLocationParams } from '../services/queries/country/location';
 
 export default function HomePage() {
     const colorScheme = useColorScheme();
     const router = useRouter();
     const mapRef = useRef<MapView>(null);
+
+    const dispatch = useDispatch();
 
     const [region, setRegion] = useState<Region>({
         latitude: -23.55052,
@@ -30,8 +32,11 @@ export default function HomePage() {
     });
 
     const [portalEnabled, setPortalEnabled] = useState<boolean>(false);
-    const [markersList, setMarkersList] = useState<AddLocationParams[]>([]);
     const handleClose = () => setPortalEnabled(false);
+
+    const locations = useSelector(selectLocations);
+
+    const { queryResult } = useLocation();
 
     const handleMapPress = (event: MapPressEvent) => {
         const coord = event.nativeEvent.coordinate;
@@ -45,32 +50,29 @@ export default function HomePage() {
     };
 
     const handleRefreshLocations = () => {
-        const storage = getItem<AddLocationParams[]>('locations');
-        storage.then((items) => {
-            if (items) {
-                if (items.length === 0) return;
+        const { data, refetch } = queryResult;
 
-                setMarkersList(items);
+        refetch();
 
-                const lastItem = items[items.length - 1];
-                const newRegion = {
-                    latitude: lastItem.latitude,
-                    longitude: lastItem.longitude,
-                    latitudeDelta: 0.01,
-                    longitudeDelta: 0.01,
-                };
+        if (data && data.location.length > 0) {
+            dispatch(addLocation(data.location));
 
-                setRegion(newRegion);
-                mapRef.current?.animateToRegion(newRegion, 1000);
-                Toast.success('Locations refreshed successfully!');
-            }
-        });
+            const lastItem = data.location[data.location.length - 1];
+            const newRegion = {
+                latitude: lastItem.latitude,
+                longitude: lastItem.longitude,
+                latitudeDelta: 0.01,
+                longitudeDelta: 0.01,
+            };
+
+            setRegion(newRegion);
+            mapRef.current?.animateToRegion(newRegion, 1000);
+            Toast.success('Locations refreshed successfully!');
+        }
     };
 
     const {
-        data,
-        loading,
-        error
+        data
     } = useQuery(GET_COUNTRY_INFORMATION);
 
     useEffect(() => {
@@ -101,13 +103,9 @@ export default function HomePage() {
         handleRefreshLocations();
     }, []);
 
-    useFocusEffect(
-        useCallback(() => {
-            setTimeout(() => {
-                handleRefreshLocations();
-            }, 1000);
-        }, [])
-    );
+    useEffect(() => {
+        handleRefreshLocations();
+    }, [locations]);
 
     return <Screen>
         <Label label="Map Locations" />
@@ -120,7 +118,7 @@ export default function HomePage() {
             region={region}
         >
             <Marker coordinate={region} />
-            {markersList.map((marker, index) => (
+            {locations.map((marker, index) => (
                 <Marker key={index} coordinate={marker} pinColor={marker.color} />
             ))}
         </MapView>
@@ -138,18 +136,18 @@ export default function HomePage() {
 
                 <ScrollView>
                     {data?.countries.map(country => (
-                        <TouchableOpacity 
-                        style={{ padding: 10, borderBottomWidth: 1, borderBottomColor: '#ccc' }} 
-                        onPress={() => {
-                            setRegion({
-                            latitude: country.defaultLatitude,
-                            longitude: country.defaultLongitude,
-                            latitudeDelta: 0.01,
-                            longitudeDelta: 0.01,
-                        })
-                        handleClose();
-                        }}
-                        key={country.id}>
+                        <TouchableOpacity
+                            style={{ padding: 10, borderBottomWidth: 1, borderBottomColor: '#ccc' }}
+                            onPress={() => {
+                                setRegion({
+                                    latitude: country.defaultLatitude,
+                                    longitude: country.defaultLongitude,
+                                    latitudeDelta: 0.01,
+                                    longitudeDelta: 0.01,
+                                })
+                                handleClose();
+                            }}
+                            key={country.id}>
                             <Text>{country.name}</Text>
                         </TouchableOpacity>
                     ))}

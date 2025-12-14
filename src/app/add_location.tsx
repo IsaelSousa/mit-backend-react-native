@@ -2,8 +2,8 @@ import ColorPickerModal from "@/src/components/color_picker";
 import { Button, ButtonText } from "@/src/components/ui/button";
 import { DownloadIcon, Icon } from "@/src/components/ui/icon";
 import { useColorScheme } from "@/src/hooks/use-color-scheme.web";
+import { addLocation } from "@/src/store/reducers/locationSlice";
 import { addNotification } from "@/src/store/reducers/notificationSlice";
-import { getItem, setItem } from "@/src/utils/AsyncStorage";
 import AntDesign from "@expo/vector-icons/AntDesign";
 import * as ImagePicker from "expo-image-picker";
 import { useLocalSearchParams, useRouter } from "expo-router";
@@ -13,6 +13,7 @@ import { Region } from "react-native-maps";
 import uuid from "react-native-uuid";
 import { useDispatch } from "react-redux";
 import { Toast } from "toastify-react-native";
+import { useLocation } from "../hooks/useLocation";
 import { AddLocationParams } from "../services/queries/country/location";
 
 export default function AddLocationPage() {
@@ -20,29 +21,42 @@ export default function AddLocationPage() {
     const colorScheme = useColorScheme();
     const router = useRouter();
 
+    const { createData, queryResult } = useLocation();
+    
     const dispatch = useDispatch();
 
     const [openColorPicker, setOpenColorPicker] = useState<boolean>(false);
-    const [regionState, setRegionState] = useState<AddLocationParams | null>(null);
+    const [regionState, setRegionState] = useState<AddLocationParams>({
+        name: '',
+        latitude: 0,
+        longitude: 0,
+        color: '',
+        imageBase64: ''
+    });
 
-    const handleSavePicker = () => {
+    const handleSavePicker = async () => {
         try {
-            const getActualItems = getItem<AddLocationParams[]>('locations');
+            const data = await createData(regionState);
 
-            getActualItems.then((items) => {
-                const newItems = items ? [...items] : [];
-                if (regionState) newItems.push(regionState);
-                setItem('locations', newItems);
-            });
+            if (data != null && data.data != null && data.data.createLocation != null) {
+                Toast.success('Location saved successfully!');
+                dispatch(addNotification({
+                    id: uuid.v4().toString(),
+                    readed: false,
+                    text: "Okay! Your location has been saved successfully.",
+                    timestamp: new Date().toISOString()
+                }));
+                router.push('/');
 
-            Toast.success('Location saved successfully!');
-            dispatch(addNotification({
-                id: uuid.v4().toString(),
-                readed: false,
-                text: "Okay! Your location has been saved successfully.",
-                timestamp: new Date().toISOString()
-            }));
-            router.push('/');
+                const dataResult = queryResult.data;
+
+                if (dataResult) {
+                    dispatch(addLocation(dataResult.location));
+                    console.log('Dispatched addLocation with:', dataResult.location);
+                }
+                    
+            }
+
         } catch (error) {
             Toast.error('Error saving location');
         }
@@ -65,7 +79,7 @@ export default function AddLocationPage() {
         if (!result.canceled) {
             const base64String = result.assets[0].base64;
             if (typeof base64String === 'string') {
-                setRegionState((prev) => prev ? { ...prev, imageBase64: base64String } : null);
+                setRegionState((prev) => ({ ...prev, imageBase64: base64String }));
             }
         } else {
             alert('You did not select any image.');
@@ -73,15 +87,14 @@ export default function AddLocationPage() {
     };
 
     useEffect(() => {
-        const id = uuid.v4();
         if (region) {
             const data = JSON.parse(region as string) as Region;
             setRegionState({
-                id,
                 latitude: data.latitude,
                 longitude: data.longitude,
                 name: 'Default Name',
                 color: '#ff0000',
+                imageBase64: ''
             });
         }
     }, [region]);
@@ -92,7 +105,7 @@ export default function AddLocationPage() {
             open={openColorPicker}
             initialColor={regionState?.color}
             onComplete={(color) => {
-                setRegionState((prev) => prev ? { ...prev, color: color.hex } : null);
+                setRegionState((prev) => ({ ...prev, color: color.hex }));
                 setOpenColorPicker(false);
             }}
             onClose={() => setOpenColorPicker(false)}
@@ -102,7 +115,7 @@ export default function AddLocationPage() {
             style={[style.input, { color: colorScheme === 'dark' ? '#ffffff' : '#000000' }]}
             placeholder="Location Name" value={regionState?.name}
             placeholderTextColor={colorScheme === 'dark' ? '#888888' : '#aaaaaa'}
-            onChangeText={(text) => setRegionState((prev) => prev ? { ...prev, name: text } : null)}
+            onChangeText={(text) => setRegionState((prev) => ({ ...prev, name: text }))}
         />
 
         <View style={style.colorPickerContainer}>
@@ -110,7 +123,7 @@ export default function AddLocationPage() {
                 style={[style.input, { color: colorScheme === 'dark' ? '#ffffff' : '#000000', width: '50%' }]}
                 placeholder="Color" value={regionState?.color}
                 placeholderTextColor={colorScheme === 'dark' ? '#888888' : '#aaaaaa'}
-                onChangeText={(text) => setRegionState((prev) => prev ? { ...prev, color: text } : null)}
+                onChangeText={(text) => setRegionState((prev) => ({ ...prev, color: text }))}
             />
             <TouchableOpacity onPress={() => setOpenColorPicker(true)} style={[style.colorPickerButton, { backgroundColor: regionState?.color || (colorScheme === 'dark' ? '#1d1d1d' : '#ffffff'), borderWidth: 1, borderColor: '#888888' }]}>
                 <AntDesign name="bg-colors" size={24} color={colorScheme === 'dark' ? '#ffffff' : '#000000'} />

@@ -8,60 +8,51 @@ import { EditIcon, Icon, TrashIcon } from "@/src/components/ui/icon";
 import { Pressable } from "@/src/components/ui/pressable";
 import { Text } from "@/src/components/ui/text";
 import { useThemeColor } from "@/src/hooks/use-theme-color";
-import { getItem, setItem } from "@/src/utils/AsyncStorage";
 import Entypo from '@expo/vector-icons/Entypo';
 import { useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import { Image, StyleSheet, View } from "react-native";
 import { FlatList, RefreshControl } from "react-native-gesture-handler";
 import { Toast } from "toastify-react-native";
-import { AddLocationParams } from '../services/queries/country/location';
+import { useLocation } from '../hooks/useLocation';
 
 export default function LocationsList() {
     const router = useRouter();
-
-    const [markersList, setMarkersList] = useState<AddLocationParams[]>([]);
-    const [loading, setLoading] = useState<boolean>(false);
     const textColor = useThemeColor({}, 'text');
+
+    const [loading, setLoading] = useState<boolean>(false);
+    const { queryResult, deleteData } = useLocation();
 
     const [dialogVisible, setDialogVisible] = useState<boolean>(false);
     const [base64Image, setBase64Image] = useState<string>('');
 
     const handleClose = () => {
         setDialogVisible(false);
-    }
+    };
 
     const handleGetLocations = async () => {
-        setLoading(true);
-        const storage = getItem<AddLocationParams[]>('locations');
-        storage.then((items) => {
-            if (items) setMarkersList(items);
-            setLoading(false);
-        });
+        queryResult.refetch();
     };
 
     const handleOpenImageDialog = (base64: string) => {
         if (base64) {
             setBase64Image(base64);
             setDialogVisible(true);
+        } else {
+            Toast.info('No image available for this location');
         }
     };
 
-    const handleDeleteLocation = (id: string) => {
+    const handleDeleteLocation = async (id: string) => {
         try {
             setLoading(true);
-            const storage = getItem<AddLocationParams[]>('locations');
+            const { data } = await deleteData(id);
 
-            storage.then((items) => {
-                if (items) {
-                    const filteredItems = items.filter(item => item.id !== id);
-                    setMarkersList(filteredItems);
-                    setItem('locations', filteredItems);
-                    setLoading(false);
-                    Toast.success('Location deleted successfully!');
-                }
-            });
-
+            if (data?.deleteLocation) {
+                queryResult.refetch();
+                setLoading(false);
+                Toast.success('Location deleted successfully!');
+            }
         } catch (error) {
             Toast.error('Error fetching locations');
         }
@@ -88,7 +79,7 @@ export default function LocationsList() {
             </AlertDialog>
             <FlatList
                 refreshControl={<RefreshControl refreshing={loading} onRefresh={handleGetLocations} />}
-                data={markersList}
+                data={queryResult.data?.location || []}
                 renderItem={({ item, index }) => (
                     <View key={index} style={styles.item}>
                         <View>
@@ -99,10 +90,22 @@ export default function LocationsList() {
                         <View>
                             <Pressable
                                 className="bg-gray-400 p-2 rounded mb-2"
-                                onPress={() => router.push({ pathname: '/edit_location', params: { region: JSON.stringify(item) } })}>
+                                onPress={() => router.push({
+                                    pathname: '/edit_location', params: {
+                                        region: JSON.stringify({
+                                            updateLocationId: item.id,
+                                            name: item.name,
+                                            latitude: item.latitude,
+                                            longitude: item.longitude,
+                                            color: item.color,
+                                            imageBase64: item.imageBase64 || ''
+                                        })
+                                    }
+                                })}>
                                 <Icon as={EditIcon} color={textColor} size="xl" />
                             </Pressable>
                             <Pressable
+                                disabled={!item.imageBase64}
                                 className="bg-green-800 p-2 rounded mb-2"
                                 onPress={() => handleOpenImageDialog(item.imageBase64 || '')}>
                                 <Entypo name="image" size={24} color="white" />
