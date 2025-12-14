@@ -14,6 +14,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { Toast } from 'toastify-react-native';
 import { Button, ButtonIcon } from '../components/ui/button';
 import { CloseIcon } from '../components/ui/icon';
+import { sendLocalNotification } from '../hooks/useLocaleNotification';
 import { useLocation } from '../hooks/useLocation';
 import { GET_COUNTRY_INFORMATION } from '../services/queries/country/city';
 
@@ -75,25 +76,24 @@ export default function HomePage() {
         data
     } = useQuery(GET_COUNTRY_INFORMATION);
 
-    async function sendPushNotification(expoPushToken: string) {
-        const message = {
-            to: expoPushToken,
-            sound: 'default',
-            title: 'Original Title',
-            body: 'And here is the body!',
-            data: { someData: 'goes here' },
-        };
+    // async function sendPushNotification(expoPushToken: string, title?: string, body?: string) {
+    //     const message = {
+    //         to: expoPushToken,
+    //         sound: 'default',
+    //         title: title || 'Original Title',
+    //         body: body || 'And here is the body!',
+    //     };
 
-        await fetch('https://exp.host/--/api/v2/push/send', {
-            method: 'POST',
-            headers: {
-                Accept: 'application/json',
-                'Accept-encoding': 'gzip, deflate',
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(message),
-        });
-    }
+    //     await fetch('https://exp.host/--/api/v2/push/send', {
+    //         method: 'POST',
+    //         headers: {
+    //             Accept: 'application/json',
+    //             'Accept-encoding': 'gzip, deflate',
+    //             'Content-Type': 'application/json',
+    //         },
+    //         body: JSON.stringify(message),
+    //     });
+    // }
 
     useEffect(() => {
         (async () => {
@@ -194,7 +194,8 @@ export default function HomePage() {
             },
             {
                 icon: <FontAwesome name="cloud" size={24} color={colorScheme === 'dark' ? '#ffffff' : '#000000'} />,
-                onPress: () => sendPushNotification("BKKV4TLO-ZSf2uIcoek1gD-yENljRT-ZwdMliJiDU0x95tLfFvWyB_SAO8vZP258waXCAjt6K5txRGOnLT8nxaY")
+                // onPress: () => sendPushNotification("ExponentPushToken[XBPW0_KY1zvWYCQYOhuw4-]")
+                onPress: () => sendLocalNotification("Hello!", "This is a local notification.")
             }
         ]}
         />

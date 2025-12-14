@@ -15,4 +15,4 @@ With graphql started, you can start the expo application.
 ```
 
 
-generate aab - eas build
+generate aab - eas build --platform android --profile production
