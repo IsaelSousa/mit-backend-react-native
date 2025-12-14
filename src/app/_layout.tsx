@@ -16,6 +16,8 @@ import 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Provider } from 'react-redux';
 import ToastManager from 'toastify-react-native';
+import { useNotification } from '../hooks/useNotification';
+useNotification();
 
 export default function RootLayout() {
   const colorScheme = useColorScheme();

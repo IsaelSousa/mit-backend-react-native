@@ -13,3 +13,6 @@ With graphql started, you can start the expo application.
 ```shell
    npm i && npm run start
 ```
+
+
+generate aab - eas build

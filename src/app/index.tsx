@@ -75,6 +75,26 @@ export default function HomePage() {
         data
     } = useQuery(GET_COUNTRY_INFORMATION);
 
+    async function sendPushNotification(expoPushToken: string) {
+        const message = {
+            to: expoPushToken,
+            sound: 'default',
+            title: 'Original Title',
+            body: 'And here is the body!',
+            data: { someData: 'goes here' },
+        };
+
+        await fetch('https://exp.host/--/api/v2/push/send', {
+            method: 'POST',
+            headers: {
+                Accept: 'application/json',
+                'Accept-encoding': 'gzip, deflate',
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(message),
+        });
+    }
+
     useEffect(() => {
         (async () => {
             const { status } = await Location.requestForegroundPermissionsAsync();
@@ -171,6 +191,10 @@ export default function HomePage() {
             {
                 icon: <FontAwesome name="book" size={24} color={colorScheme === 'dark' ? '#ffffff' : '#000000'} />,
                 onPress: () => setPortalEnabled(true)
+            },
+            {
+                icon: <FontAwesome name="cloud" size={24} color={colorScheme === 'dark' ? '#ffffff' : '#000000'} />,
+                onPress: () => sendPushNotification("BKKV4TLO-ZSf2uIcoek1gD-yENljRT-ZwdMliJiDU0x95tLfFvWyB_SAO8vZP258waXCAjt6K5txRGOnLT8nxaY")
             }
         ]}
         />

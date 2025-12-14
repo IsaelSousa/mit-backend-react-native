@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "755566099820",
+    "project_id": "mit-reactnative",
+    "storage_bucket": "mit-reactnative.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:755566099820:android:4dadec9c58390c6bbdc749",
+        "android_client_info": {
+          "package_name": "com.mitbackend.reactnative"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA44zOJexAutDwiNQrBpiIQMl87r6sUxxU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
